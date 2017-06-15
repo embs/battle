@@ -1,8 +1,9 @@
-channel sharpen_sword
+channel have_bards_to_sing_worship_songs, sharpen_sword
 
 -- hp: amount of health points
 WARRIOR(hp) =
-  sharpen_sword -> WARRIOR(hp)
+  have_bards_to_sing_worship_songs -> WARRIOR(hp)
+  [] hp > 0 & sharpen_sword -> WARRIOR(hp)
 
 assert WARRIOR(3) :[deadlock free]
 assert WARRIOR(3) :[divergence free]
