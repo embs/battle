@@ -5,7 +5,10 @@ channel have_bards_to_sing_worship_songs, sharpen_sword
 WARRIOR_MAX_SP = 10
 
 -- Dragon's behaviour
-channel fly_in_the_endless_blue_sky
+channel fly_in_the_endless_blue_sky, regurgitate_fire
+
+-- Dragon's attributes
+DRAGON_MAX_SP = 20
 
 -- hp: amount of health points
 -- sp: stamina points
@@ -13,14 +16,16 @@ WARRIOR(hp, sp) =
   have_bards_to_sing_worship_songs -> WARRIOR(hp, sp)
   [] hp > 0 and sp < WARRIOR_MAX_SP & sharpen_sword -> WARRIOR(hp, sp + 1)
 
-DRAGON(hp) =
-  fly_in_the_endless_blue_sky -> DRAGON(hp)
+DRAGON(hp, sp) =
+  fly_in_the_endless_blue_sky -> DRAGON(hp, sp)
+  [] hp > 0 and sp < DRAGON_MAX_SP & regurgitate_fire -> DRAGON(hp, sp + 1)
 
 DOM_QUIXOTE = WARRIOR(3, 3)
 assert DOM_QUIXOTE :[deadlock free]
 assert DOM_QUIXOTE :[divergence free]
 assert DOM_QUIXOTE :[deterministic]
 
-assert DRAGON(3) :[deadlock free]
-assert DRAGON(3) :[divergence free]
-assert DRAGON(3) :[deterministic]
+ROCINANTE = DRAGON(3, 3)
+assert ROCINANTE :[deadlock free]
+assert ROCINANTE :[divergence free]
+assert ROCINANTE :[deterministic]
