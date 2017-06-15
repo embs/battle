@@ -1,0 +1,9 @@
+channel sharpen_sword
+
+-- hp: amount of health points
+WARRIOR(hp) =
+  sharpen_sword -> WARRIOR(hp)
+
+assert WARRIOR(3) :[deadlock free]
+assert WARRIOR(3) :[divergence free]
+assert WARRIOR(3) :[deterministic]
