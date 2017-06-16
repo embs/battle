@@ -3,22 +3,37 @@ channel have_bards_to_sing_worship_songs, sharpen_sword
 
 -- Warrior's attributes
 WARRIOR_MAX_SP = 10
+SWORD_STAB_SP_COST = 3
+SWORD_STAB_DAMAGE = 1
 
 -- Dragon's behaviour
 channel fly_in_the_endless_blue_sky, regurgitate_fire
 
 -- Dragon's attributes
 DRAGON_MAX_SP = 20
+FIRE_SPIT_SP_COST = 3
+FIRE_SPIT_DAMAGE = 1
+
+-- Shared behaviour
+channel damage_warrior, damage_dragon : {1..5}
 
 -- hp: amount of health points
 -- sp: stamina points
 WARRIOR(hp, sp) =
   have_bards_to_sing_worship_songs -> WARRIOR(hp, sp)
   [] hp > 0 and sp < WARRIOR_MAX_SP & sharpen_sword -> WARRIOR(hp, sp + 1)
+  [] hp > 0 and sp >= SWORD_STAB_SP_COST &
+     damage_dragon.SWORD_STAB_DAMAGE -> WARRIOR(hp, sp - SWORD_STAB_SP_COST)
+  [] hp > 0 & damage_warrior?d -> WARRIOR(hp - d, sp)
 
 DRAGON(hp, sp) =
   fly_in_the_endless_blue_sky -> DRAGON(hp, sp)
   [] hp > 0 and sp < DRAGON_MAX_SP & regurgitate_fire -> DRAGON(hp, sp + 1)
+  [] hp > 0 and sp >= FIRE_SPIT_SP_COST &
+     damage_warrior.FIRE_SPIT_DAMAGE -> DRAGON(hp, sp - FIRE_SPIT_SP_COST)
+  [] hp > 0 & damage_dragon?d -> DRAGON(hp - d, sp)
+
+BATTLE = DOM_QUIXOTE [|{|damage_warrior, damage_dragon|}|] ROCINANTE
 
 DOM_QUIXOTE = WARRIOR(3, 3)
 assert DOM_QUIXOTE :[deadlock free]
@@ -29,3 +44,7 @@ ROCINANTE = DRAGON(3, 3)
 assert ROCINANTE :[deadlock free]
 assert ROCINANTE :[divergence free]
 assert ROCINANTE :[deterministic]
+
+assert BATTLE :[deadlock free]
+assert BATTLE :[divergence free]
+assert BATTLE :[deterministic]
