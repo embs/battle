@@ -19,24 +19,25 @@ object Battle {
 
     println("Come here you @(*&% beast!")
     while(hp > 0) {
-      if(sp >= SwordStabSpCost) {
-        inflictDamage!SwordStabDamage ;
-        sp = sp - SwordStabSpCost
-        println("Warrior stabs dragon with their sword")
-      } else
-        throw new io.threadcso.processimplementation.Stopped()
-
       if(sp < WarriorMaxSp) {
+        println("Warrior sharpens their sword and recovers 1 SP")
         sp = sp + 1
-        println("Warrior sharpens their sword and recovers 1 SP. Now: " + sp)
-      } else
+      } else {
+        println("Warrior throws Stopped")
         throw new io.threadcso.processimplementation.Stopped()
+      }
 
-      damage = receiveDamage? ;
-      hp = hp - damage
-
-      println("Warrior's HP/SP: " + hp + "/" + sp)
-      throw new io.threadcso.processimplementation.Stopped()
+      alt(
+        (sp >= SwordStabSpCost &&& inflictDamage) =!=> { SwordStabDamage } ==> {
+          sp = sp - SwordStabSpCost
+          println("Warrior stabs dragon with their sword")
+        }
+        |
+        (hp > 0 &&& receiveDamage) =?=> {
+          damage => hp = hp - damage
+          println("Warrior receives " + damage + " damage")
+        }
+      )
     }
     println("Warrior's dead")
   }
@@ -50,12 +51,20 @@ object Battle {
       if(sp < DragonMaxSp) {
         sp = sp + 1
         println("Dragon regurgitates fire and recovers 1 SP. Now it has " + sp)
-      } else
+      } else {
+        println("Dragon throws Stopped")
         throw new io.threadcso.processimplementation.Stopped()
+      }
 
       alt(
-        ((hp > 0 && sp >= FireSpitSpCost) &&& inflictDamage) =!=> { FireSpitDamage } ==> { println("Dragon spits fire all over the warrior"); sp = sp - FireSpitSpCost }
-        | (hp > 0 &&& receiveDamage) =?=> { damage => hp = hp - damage }
+        ((hp > 0 && sp >= FireSpitSpCost) &&& inflictDamage) =!=> { FireSpitDamage } ==> {
+          println("Dragon spits fire all over the warrior"); sp = sp - FireSpitSpCost
+        }
+        |
+        (hp > 0 &&& receiveDamage) =?=> {
+          damage => hp = hp - damage
+          println("Dragon receives " + damage + " damage")
+        }
       )
 
       println("Dragon's HP/SP: " + hp + "/" + sp)
