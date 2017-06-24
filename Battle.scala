@@ -1,3 +1,5 @@
+import scala.util.Random
+
 import io.threadcso._
 
 object Battle {
@@ -16,59 +18,65 @@ object Battle {
     var hp : Int = 3
     var sp : Int = 3
     var damage: Int = 0
+    var choice : Int = 0
 
     println("Come here you @(*&% beast!")
     while(hp > 0) {
-      if(sp < WarriorMaxSp) {
-        println("Warrior sharpens their sword and recovers 1 SP")
-        sp = sp + 1
-      } else {
-        println("Warrior throws Stopped")
-        throw new io.threadcso.processimplementation.Stopped()
-      }
-
-      alt(
-        (sp >= SwordStabSpCost &&& inflictDamage) =!=> { SwordStabDamage } ==> {
-          sp = sp - SwordStabSpCost
-          println("Warrior stabs dragon with their sword")
-        }
-        |
-        (hp > 0 &&& receiveDamage) =?=> {
-          damage => hp = hp - damage
+      // Receive damage if attacked.
+      serve((true &&& receiveDamage) =?=> {
+        damage => {
           println("Warrior receives " + damage + " damage")
         }
-      )
+      } | after(400) ==> {})
+      // Choose between recovering SP or attacking.
+      choice = Random.nextInt(2)
+
+      choice match {
+        case 0 if sp < WarriorMaxSp => {
+          println("Warrior sharpens their sword and recovers 1 SP")
+          sp += 1
+        }
+        case 1 if sp >= SwordStabSpCost => {
+          println("Warrior stabs dragon with their sword")
+          inflictDamage!SwordStabDamage
+          sp -= SwordStabSpCost
+        }
+      }
     }
+
     println("Warrior's dead")
   }
 
   def dragon(inflictDamage: ![Int], receiveDamage: ?[Int]) = proc {
     var hp : Int = 3
     var sp : Int = 3
+    var damage: Int = 0
+    var choice : Int = 0
 
     println("Ggggrrrrrrrr")
     while(hp > 0) {
-      if(sp < DragonMaxSp) {
-        sp = sp + 1
-        println("Dragon regurgitates fire and recovers 1 SP. Now it has " + sp)
-      } else {
-        println("Dragon throws Stopped")
-        throw new io.threadcso.processimplementation.Stopped()
-      }
-
-      alt(
-        ((hp > 0 && sp >= FireSpitSpCost) &&& inflictDamage) =!=> { FireSpitDamage } ==> {
-          println("Dragon spits fire all over the warrior"); sp = sp - FireSpitSpCost
-        }
-        |
-        (hp > 0 &&& receiveDamage) =?=> {
-          damage => hp = hp - damage
+      // Receive damage if attacked.
+      serve((true &&& receiveDamage) =?=> {
+        damage => {
           println("Dragon receives " + damage + " damage")
         }
-      )
+      } | after(400) ==> { println("Dragon gave up attacking") })
+      // Choose between recovering SP or attacking.
+      choice = Random.nextInt(2)
 
-      println("Dragon's HP/SP: " + hp + "/" + sp)
+      choice match {
+        case 0 if sp < DragonMaxSp => {
+          println("Dragon regurgitates fire and recovers 1 SP")
+          sp += 1
+        }
+        case 1 if sp >= FireSpitSpCost => {
+          println("Dragon spits fire all over the warrior")
+          inflictDamage!FireSpitDamage
+          sp -= FireSpitSpCost
+        }
+      }
     }
+
     println("Dragon's dead")
   }
 
