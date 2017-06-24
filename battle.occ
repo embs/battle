@@ -1,0 +1,91 @@
+#INCLUDE "course.module"
+
+PROC main (SHARED CHAN BYTE out!)
+  CHAN INT warrior.attacks.dragon :
+  CHAN INT dragon.attacks.warrior :
+  TIMER clock :
+
+  REC PROC warrior (CHAN INT attack, be.attacked, VAL INT hp, sp)
+    INT damage, now :
+    INITIAL INT max.warrior.sp IS 10 :
+
+    SEQ -- I'd really like to remove this
+      CLAIM out!                  -- this
+        out.string("--", 0, out!) -- and this lines
+      ALT
+        TRUE & SKIP
+          SEQ
+            clock ? now -- delay to avoid polluting output
+            clock ? AFTER now PLUS 10000
+            CLAIM out!
+              out.string(".", 0, out!)
+            warrior(attack, be.attacked, hp, sp)
+        ((hp > 0) AND (sp < max.warrior.sp)) & SKIP
+          SEQ
+            CLAIM out!
+              SEQ
+                out.string("Warrior recovers 1 sp.*n", 0, out!)
+            warrior(attack, be.attacked, hp, sp + 1)
+        ((hp > 0) AND (sp >= 3)) & SKIP
+          SEQ
+            attack ! 5
+            warrior(attack, be.attacked, hp, sp - 1)
+        hp > 0 & be.attacked ? damage
+          SEQ
+            CLAIM out!
+              SEQ
+                out.string("Warrior receives ", 0, out!)
+                out.int(damage, 0, out!)
+                out.string(" damage and now has ", 0, out!)
+                out.int(hp - damage, 0, out!)
+                out.string(" hp.*n", 0, out!)
+            warrior(attack, be.attacked, hp - damage, sp)
+  :
+
+  REC PROC dragon (CHAN INT attack, be.attacked, VAL INT hp, sp)
+    INT damage, now :
+    INITIAL INT max.dragon.sp IS 10 :
+
+    SEQ -- I'd really like to remove this
+      CLAIM out!                  -- this
+        out.string("--", 0, out!) -- and this lines
+      ALT
+        TRUE & SKIP
+          SEQ
+            clock ? now -- delay to avoid polluting output
+            clock ? AFTER now PLUS 10000
+            CLAIM out!
+              out.string(".", 0, out!)
+            dragon(attack, be.attacked, hp, sp)
+        ((hp > 0) AND (sp < max.dragon.sp)) & SKIP
+          SEQ
+            CLAIM out!
+              SEQ
+                out.string("Dragon recovers 1 sp.*n", 0, out!)
+            dragon(attack, be.attacked, hp, sp + 1)
+        ((hp > 0) AND (sp >= 3)) & SKIP
+          SEQ
+            attack ! 5
+            dragon(attack, be.attacked, hp, sp - 1)
+        hp > 0 & be.attacked ? damage
+          SEQ
+            CLAIM out!
+              SEQ
+                out.string("Dragon receives ", 0, out!)
+                out.int(damage, 0, out!)
+                out.string(" damage and now has ", 0, out!)
+                out.int(hp - damage, 0, out!)
+                out.string(" hp.*n", 0, out!)
+            dragon(attack, be.attacked, hp - damage, sp)
+  :
+
+  SEQ
+    VAL INT warrior.hp IS 10 :
+    VAL INT warrior.sp IS 3 :
+    VAL INT dragon.hp IS 10 :
+    VAL INT dragon.sp IS 3 :
+    PAR
+      warrior (warrior.attacks.dragon, dragon.attacks.warrior, warrior.hp, warrior.sp)
+      dragon (dragon.attacks.warrior, warrior.attacks.dragon, dragon.hp, dragon.sp)
+:
+
